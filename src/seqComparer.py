@@ -431,33 +431,39 @@ class seqComparer():
         else:
             return((key1, key2, nDiff, None, None, None, None, None, None))
 
+    def getDifferences(self, cutoff=None):
+        """ returns the positions of difference between self.seq1 and self.seq2.
+        these are set with self.setComparator1 and 2 respectively.
+        Returns a set containing the positions of SNPs between self.seq1 and self.seq2. """
+        
+        # compute positions which differ;
+        differing_positions = set()
+        for nucleotide in ['C','G','A','T']:
+       
+            # we do not consider differences relative to the reference if the other nucleotide is an N
+            nonN_seq1=self.seq1[nucleotide]-self.seq2['N']
+            nonN_seq2=self.seq2[nucleotide]-self.seq1['N']
+            differing_positions = differing_positions | (nonN_seq1 ^ nonN_seq2)
+        return(differing_positions)
+    
     
     def countDifferences_one(self,cutoff=None):
         """ compares self.seq1 with self.seq2;
         these are set with self.setComparator1 and 2 respectively.
         Returns the number of SNPs between self.seq1 and self.seq2.
-        
-
-        rate about 7500 per second."""
+    
+        rate about 10,000+ per second depending on hardware."""
         # if cutoff is not specified, we use snpCeiling
         if cutoff is None:
             cutoff = self.snpCeiling
 
-            
-        nDiff=0
-        if self.seq1['invalid']==1 or self.seq2['invalid']==1:
+        # compute positions which differ;
+        differing_positions = self.getDifferences()
+        nDiff = len(differing_positions)
+        
+        if nDiff>cutoff:
             return(None)
-        for nucleotide in ['C','G','A','T']:
-       
-            # we do not consider differences relative to the reference if the other nucleotide is an N
-            # we invoke the SortedSetSubtract method to help us here.
-            nonN_seq1=self._sortedSetSubtract(self.seq1[nucleotide],self.seq2['N'])
-            nonN_seq2=self._sortedSetSubtract(self.seq2[nucleotide],self.seq1['N'])
-
-            nDiff=nDiff+len(nonN_seq1 ^ nonN_seq2)
-            if nDiff>cutoff:
-                return(None)
-        return(nDiff)    
+        return(nDiff)  
 
 class test_seqComparer_init1(unittest.TestCase):
     def runTest(self):
@@ -614,6 +620,19 @@ class test_seqComparer_15(unittest.TestCase):
         sc.setComparator1(sequence='TTAA')
         sc.setComparator2(sequence='--AG')
         self.assertEqual(sc.countDifferences(method='one'),1)
+class test_seqComparer_16(unittest.TestCase):
+    """ tests the comparison of two sequences where both differ from the reference. """
+    def runTest(self):   
+        # generate compressed sequences
+        refSeq='ACTG'
+        sc=seqComparer( NCompressionCutoff = 1e8, maxNs = 1e8,
+                       reference=refSeq,
+                       startAfresh=True,
+                       snpCeiling =10)
+        
+        sc.seq1 = sc.compress('AAAA')
+        sc.seq2 = sc.compress('CCCC')
+        self.assertEqual(sc.countDifferences(),4)
 
 class test_seqComparer_saveload3(unittest.TestCase):
     def runTest(self):
