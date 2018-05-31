@@ -41,6 +41,7 @@ import sys
 import requests
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 import xmlrpc.client
 import gzip
 import warnings
@@ -890,10 +891,10 @@ if __name__ == '__main__':
         root.setLevel(loglevel)
         
         # handles logging both with a stream to stderr and a rotating file
-        rfh_handler = logging.handlers.RotatingFileHandler(CONFIG['LOGFILE'], maxBytes=100000, backupCount=5)
+        rfh_handler = RotatingFileHandler(CONFIG['LOGFILE'], maxBytes=100000, backupCount=5)
         stream_handler = logging.StreamHandler()
 
-        formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(funcName)s | %(levelname)s | %(message)s ")
+        formatter = logging.Formatter( "REST: %(asctime)s | %(pathname)s:%(lineno)d | %(funcName)s | %(levelname)s | %(message)s ")
         rfh_handler.setFormatter(formatter)
         stream_handler.setFormatter(formatter)
         

@@ -136,7 +136,7 @@ nohup python3 webservice-server.py {configfile.json} &
 ```
 
 * If {configfile.json} is not provided, then it will use a default config file, config/default_test_config.json  
-This is suitable for testing. It runs a test instance on localhost using an SQLite backend in ../unittest_Tmp/.
+This is suitable for testing. It runs a test instance on localhost using an SQLite backend in ../unittest_tmp/.
 **It is unsuitable for production.  A warning is emitted if the server is running with this default configuration.**  
 
 

@@ -20,6 +20,7 @@ import json
 import queue
 import warnings
 import logging
+from logging.handlers import RotatingFileHandler
 import psutil
 import resource
 
@@ -119,27 +120,35 @@ class ElephantWalk():
 		
 		Therefore, calls to the data base layer should be wrapped in try/catch and
 		suitable rollback / error raising arranged.
+		
+		Block is wrapped in Try/Catch to ensure errors are logged as within XMLRPC server they
+		may not otherwise be reported
 		"""
 		
-		# clean, and provide summary statistics for the sequence
-		logging.info("Inserting: {0}".format(sname))
-		
-		already_exists = self.ewsc.exist_sample(sname)
-		if not already_exists:
-			self.objExaminer.examine(dna)  
+		try:
+
+			# clean, and provide summary statistics for the sequence
+			logging.info("Inserting: {0}".format(sname))
 			
-			# store the summary statistics
-			ElephantWalk.PERSIST.annotateFromDict(sequenceGuid=sname, nameSpace='DNAQuality',annotDict=self.objExaminer.composition)
+			already_exists = self.ewsc.exist_sample(sname)
+			if not already_exists:
+				self.objExaminer.examine(dna)  
+				
+				# store the summary statistics
+				ElephantWalk.PERSIST.annotateFromDict(sequenceGuid=sname, nameSpace='DNAQuality',annotDict=self.objExaminer.composition)
+				
+				# write 
+				cleaned_dna=self.objExaminer.nucleicAcidString.decode()
+				self.write_semaphore.acquire()				    # addition should be an atomic operation
+				self.ewsc.insert(sname, cleaned_dna)			# insert the DNA sequence into the server.
+				self.write_semaphore.release()                  # release the write semaphore
+				return json.dumps(["OK"])									# a response object with a 200 code would be better
+			else:
+				return json.dumps(["Already present"])
+
+		except Exception as e:
+			logging.exception(e)
 			
-			# write 
-			cleaned_dna=self.objExaminer.nucleicAcidString.decode()
-			self.write_semaphore.acquire()				    # addition should be an atomic operation
-			self.ewsc.insert(sname, cleaned_dna)			# insert the DNA sequence into the server.
-			self.write_semaphore.release()                  # release the write semaphore
-			return json.dumps(["OK"])									# a response object with a 200 code would be better
-		else:
-			return json.dumps(["Already present"])
-	
 	def exist_sample(self,sname):
 		""" determine whether the sample exists """
 		return self.ewsc.exist_sample(sname)
@@ -261,15 +270,12 @@ class ElephantWalk():
 if __name__=='__main__':
 	
 	# command line usage.  Pass the location of a config file as a single argument.
-	# an example config file is default_config.json
-
+	# an example config file is default_test_config.json
 	############################ LOAD CONFIG ######################################
-	logging.basicConfig(level=logging.INFO)
 	if len(sys.argv) == 2:			 
 		try:
 			with open(sys.argv[1],'r') as f:
-				CONFIG_STRING=f.read()
-				
+				CONFIG_STRING=f.read()		
 
 		except FileNotFoundError:
 			raise FileNotFoundError("Passed one parameter, which should be a CONFIG file name; tried to open a config file at {0} but it does not exist ".format(sys.argv[1]))
@@ -287,22 +293,42 @@ if __name__=='__main__':
 
 	########################### SET UP LOGGING #####################################
 	# defaults to INFO.  WARN and DEBUG also supported.
-	loglevel=logging.INFO
-
+	root = logging.getLogger()
+	loglevel = logging.INFO
 	if 'LOGLEVEL' in CONFIG.keys():
 		if CONFIG['LOGLEVEL']=='WARN':
-			loglevel=logging.WARN
+				loglevel=logging.WARN
 		elif CONFIG['LOGLEVEL']=='DEBUG':
-			loglevel=logging.DEBUG
+				loglevel=logging.DEBUG
+
+	# if we are debug mode, then we remove any log file and note we are in debugmode to the logfile
+	if CONFIG['DEBUGMODE']==1:
+			try:
+					os.unlink(CONFIG['LOGFILE'])
+			except FileNotFoundError:
+					pass            # if we can't delete the file, that's OK
+		
+	# configure logging object         
+	root.setLevel(loglevel)
+	
+	# handles logging both with a stream to stderr and a rotating file
+	rfh_handler = RotatingFileHandler(CONFIG['LOGFILE'], maxBytes=100000, backupCount=5)
+	stream_handler = logging.StreamHandler()
+
+	formatter = logging.Formatter( "XMLRPC %(asctime)s | %(pathname)s:%(lineno)d | %(funcName)s | %(levelname)s | %(message)s ")
+	rfh_handler.setFormatter(formatter)
+	stream_handler.setFormatter(formatter)
+	
+	# we add these log handler to the root logger.  That way, all module output (independent of flask) will go there too
+	root.addHandler(rfh_handler)
+	root.addHandler(stream_handler)
 
 	if 'LOGFILE' in CONFIG.keys():
 			logfile=os.path.abspath(CONFIG['LOGFILE'])
 			print("Logging to {0}".format(logfile))
-			logging.basicConfig(filename=logfile, format='%(asctime)s|%(levelname)s|%(message)s', level=loglevel)
 	else:
 		warnings.warn("No LOGFILE entry in CONFIG, so no logging to file in place.")
-		logging.basicConfig(format='%(asctime)s|%(levelname)s|%(message)s', level=loglevel)
-		
+	
 	
 	#########################  CONFIGURE HELPER APPLICATIONS ######################		
 
