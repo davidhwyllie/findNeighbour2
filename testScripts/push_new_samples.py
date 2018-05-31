@@ -57,6 +57,8 @@ except Exception as e:
 
 logging.info("Connected, checking existing guids ...")
 guidlist = json.loads(client.get_all_guids())
+print(guidlist)
+
 guids = set()
 for item in guidlist:
 	guids.add(item['guid'])
@@ -68,15 +70,16 @@ fastaFiles = glob.glob(CONFIG['GLOBPATH'])
 for fastaFileGz in fastaFiles:
 	#Check if the sample is already in EW
 	guid = str(ntpath.basename(fastaFileGz)[0:36])
+	print(guid)
+
 	if guid in guids:
 		print ('Sample ' + guid + ' is already in the database')
 		continue
 
 	#Convert fasta.gz to fasta to a tmp file
-	fastaFile=CONFIG['TMP_FASTA'] + ntpath.basename(fastaFileGz) 
-	fastaFile=fastaFile.replace('.gz','')
+	fastaFile=os.path.join(CONFIG['TMP_FASTA'], "{0}.fasta".format(guid)) 
 	fo=open(fastaFile,'wb')
-        	# it appears that BioPython can't cope with reading the gzip file on the fly
+       	# it appears that BioPython can't cope with reading the gzip file on the fly
 	with gzip.open(fastaFileGz,'rb') as fi:
         	fileContent=fi.read()
         	fo.write(fileContent)     # so we decompress it
@@ -86,8 +89,6 @@ for fastaFileGz in fastaFiles:
 		for seq_record in SeqIO.parse(f, 'fasta'):
 			guid = str(os.path.basename(fastaFile)[0:36])
 			nTested += 1
-			if nTested % 250==0:
-				logging.info("{1} checked {0}".format(nTested, datetime.datetime.now()))
 			if not client.exist_sample(guid):
 				seq = str(seq_record.seq)
 				print ('Inserting: ' + guid)
@@ -96,5 +97,6 @@ for fastaFileGz in fastaFiles:
 				nAdded += 1
 	#Delete the tmp file
 	os.remove(fastaFile)
+	
 
 logging.info("Scan finished.  Added {0}".format(nAdded))

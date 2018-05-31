@@ -385,12 +385,7 @@ class seqComparer():
             return(subtracted)
         else:
             raise TypeError("Cannot perform sorted set subtraction on an object of class {0}".format(sortedset2))
-    def countDifferences(self, cutoff=None, method='one'):            # appears to be faster than method 2
-        if method=='one':
-            nDiff=self.countDifferences_one(cutoff=cutoff)
-        else:
-            raise TypeError("Don't know how to perform difference operation using method {0}.".format(method))
-        return(nDiff)
+
     
     def countDifferences_byKey(self,keyPair, cutoff=None):
         """ compares the in memory refCompressed sequences at
@@ -421,7 +416,7 @@ class seqComparer():
         # if either sequence is considered invalid (e.g. high Ns) then we report no neighbours.
         self.seq1=self.seqProfile[key1]
         self.seq2=self.seqProfile[key2]
-        nDiff=self.countDifferences_one(cutoff=cutoff)
+        nDiff=self.countDifferences(cutoff=cutoff)
         
         if nDiff is None:
             return((key1, key2, nDiff, None, None, None, None, None, None))
@@ -434,8 +429,15 @@ class seqComparer():
     def getDifferences(self, cutoff=None):
         """ returns the positions of difference between self.seq1 and self.seq2.
         these are set with self.setComparator1 and 2 respectively.
-        Returns a set containing the positions of SNPs between self.seq1 and self.seq2. """
+        Returns a set containing the positions of SNPs between self.seq1 and self.seq2. 
+
+        If there are no differences, will return an empty set.
+        If either sequence is invalid, will return None."""
         
+        # if either sequence is invalid, return None
+        if self.seq1['invalid']+self.seq2['invalid']>0:
+            return(None)
+
         # compute positions which differ;
         differing_positions = set()
         for nucleotide in ['C','G','A','T']:
@@ -447,7 +449,7 @@ class seqComparer():
         return(differing_positions)
     
     
-    def countDifferences_one(self,cutoff=None):
+    def countDifferences(self,cutoff=None):
         """ compares self.seq1 with self.seq2;
         these are set with self.setComparator1 and 2 respectively.
         Returns the number of SNPs between self.seq1 and self.seq2.
@@ -459,11 +461,16 @@ class seqComparer():
 
         # compute positions which differ;
         differing_positions = self.getDifferences()
-        nDiff = len(differing_positions)
-        
-        if nDiff>cutoff:
+
+        if differing_positions is None:		# one or other calculation is invalid
             return(None)
-        return(nDiff)  
+        else:
+            nDiff = len(differing_positions)
+        
+            if nDiff>cutoff:
+                return(None)
+            else:
+                return(nDiff)  
 
 class test_seqComparer_init1(unittest.TestCase):
     def runTest(self):

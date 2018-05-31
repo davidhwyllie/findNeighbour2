@@ -841,6 +841,7 @@ if __name__ == '__main__':
         ############################ LOAD CONFIG ######################################
         root = logging.getLogger()
         root.setLevel(logging.DEBUG)
+              
         
         if len(sys.argv) == 2:
                 configFile = sys.argv[1]
