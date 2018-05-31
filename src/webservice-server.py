@@ -108,7 +108,7 @@ class ElephantWalk():
 		self.CONFIG=CONFIG
 		self.objExaminer=NucleicAcid()
 		self.ewsc=ewSetCore(CONFIG=self.CONFIG)
-		print ("EW2 is Ready; ({0})".format(self.ewsc.sc.excluded_hash()))
+		print ("findNeighbour2 Ready; ({0})".format(self.ewsc.sc.excluded_hash()))
 		
 	def insert(self,sname,dna):
 		""" insert DNA called sname into the server
@@ -275,7 +275,7 @@ if __name__=='__main__':
 			raise FileNotFoundError("Passed one parameter, which should be a CONFIG file name; tried to open a config file at {0} but it does not exist ".format(sys.argv[1]))
 	else:
 		# use default which may be inappropriate in production
-		warnings.warn("No config file name supplied as a single argument; using '../config/default_config.json' This configuration suitable only for testing, not for production.")
+		warnings.warn("No config file name supplied as a single argument; using '../config/default_test_config.json' This configuration suitable only for testing, not for production.")
 		try:
 			with open(os.path.join('..','config','default_test_config.json'),'r') as f:
 				CONFIG_STRING=f.read()
