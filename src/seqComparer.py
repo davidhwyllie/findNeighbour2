@@ -583,21 +583,21 @@ class test_seqComparer_9(unittest.TestCase):
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, snpCeiling = 20,reference=refSeq, startAfresh=True)
         sc.setComparator1(sequence='ACTG')
         sc.setComparator2(sequence='ACTG')
-        self.assertEqual(sc.countDifferences(method='one'),0)
+        self.assertEqual(sc.countDifferences(),0)
 class test_seqComparer_10(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, snpCeiling = 20,reference=refSeq, startAfresh=True)
         sc.setComparator1(sequence='TTTG')
         sc.setComparator2(sequence='ACTG')
-        self.assertEqual(sc.countDifferences(method='one'),2)
+        self.assertEqual(sc.countDifferences(),2)
 class test_seqComparer_11(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, snpCeiling = 20,reference=refSeq, startAfresh=True)
         sc.setComparator1(sequence='TTTG')
         sc.setComparator2(sequence='NNTG')
-        self.assertEqual(sc.countDifferences(method='one'),0)
+        self.assertEqual(sc.countDifferences(),0)
 class test_seqComparer_12(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
@@ -605,28 +605,28 @@ class test_seqComparer_12(unittest.TestCase):
 
         sc.setComparator2(sequence='TTTG')
         sc.setComparator1(sequence='NNTG')
-        self.assertEqual(sc.countDifferences(method='one'),0)
+        self.assertEqual(sc.countDifferences(),0)
 class test_seqComparer_13(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, snpCeiling = 20,reference=refSeq, startAfresh=True)
         sc.setComparator2(sequence='TTTG')
         sc.setComparator1(sequence='--TG')
-        self.assertEqual(sc.countDifferences(method='one'),0)
+        self.assertEqual(sc.countDifferences(),0)
 class test_seqComparer_14(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, snpCeiling = 20,reference=refSeq, startAfresh=True)
         sc.setComparator2(sequence='TTAA')
         sc.setComparator1(sequence='--AG')
-        self.assertEqual(sc.countDifferences(method='one'),1)
+        self.assertEqual(sc.countDifferences(),1)
 class test_seqComparer_15(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, snpCeiling = 20,reference=refSeq, startAfresh=True)
         sc.setComparator1(sequence='TTAA')
         sc.setComparator2(sequence='--AG')
-        self.assertEqual(sc.countDifferences(method='one'),1)
+        self.assertEqual(sc.countDifferences(),1)
 class test_seqComparer_16(unittest.TestCase):
     """ tests the comparison of two sequences where both differ from the reference. """
     def runTest(self):   
@@ -640,7 +640,32 @@ class test_seqComparer_16(unittest.TestCase):
         sc.seq1 = sc.compress('AAAA')
         sc.seq2 = sc.compress('CCCC')
         self.assertEqual(sc.countDifferences(),4)
-
+class test_seqComparer_17(unittest.TestCase):
+    """ tests the comparison of two sequences where one is invalid. """
+    def runTest(self):   
+        # generate compressed sequences
+        refSeq='ACTG'
+        sc=seqComparer( NCompressionCutoff = 1e8, maxNs = 2,
+                       reference=refSeq,
+                       startAfresh=True,
+                       snpCeiling =10)
+        
+        sc.seq1 = sc.compress('NNNN')   # invalid
+        sc.seq2 = sc.compress('ACGT')
+        self.assertEqual(sc.countDifferences(),None)
+class test_seqComparer_18(unittest.TestCase):
+    """ tests the comparison of two sequences where one is invalid. """
+    def runTest(self):   
+        # generate compressed sequences
+        refSeq='ACTG'
+        sc=seqComparer( NCompressionCutoff = 1e8, maxNs = 2,
+                       reference=refSeq,
+                       startAfresh=True,
+                       snpCeiling =10)
+        
+        sc.seq1 = sc.compress('NNNN')   # invalid
+        sc.seq2 = sc.compress('NNNN')   # invalid
+        self.assertEqual(sc.countDifferences(),None)
 class test_seqComparer_saveload3(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
@@ -792,49 +817,49 @@ class test_seqComparer_31(unittest.TestCase):
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, reference=refSeq, startAfresh=True, snpCeiling =1 )
         sc.setComparator1(sequence='ACTG')
         sc.setComparator2(sequence='ACTG')
-        self.assertEqual(sc.countDifferences(method='one'),0)
+        self.assertEqual(sc.countDifferences(),0)
 class test_seqComparer_32(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, reference=refSeq, startAfresh=True, snpCeiling =1)
         sc.setComparator1(sequence='TTTG')
         sc.setComparator2(sequence='ACTG')
-        self.assertEqual(sc.countDifferences(method='one'),None)
+        self.assertEqual(sc.countDifferences(),None)
 class test_seqComparer_33(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, reference=refSeq, startAfresh=True, snpCeiling =1)
         sc.setComparator1(sequence='TTTG')
         sc.setComparator2(sequence='NNTG')
-        self.assertEqual(sc.countDifferences(method='one'),0)
+        self.assertEqual(sc.countDifferences(),0)
 class test_seqComparer_34(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, reference=refSeq, startAfresh=True, snpCeiling =1)
         sc.setComparator2(sequence='TTTG')
         sc.setComparator1(sequence='NNTG')
-        self.assertEqual(sc.countDifferences(method='one'),0)
+        self.assertEqual(sc.countDifferences(),0)
 class test_seqComparer_13(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, reference=refSeq, startAfresh=True, snpCeiling =1)
         sc.setComparator2(sequence='TTTG')
         sc.setComparator1(sequence='--TG')
-        self.assertEqual(sc.countDifferences(method='one'),0)
+        self.assertEqual(sc.countDifferences(),0)
 class test_seqComparer_35(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, reference=refSeq, startAfresh=True, snpCeiling =1)
         sc.setComparator2(sequence='TTAA')
         sc.setComparator1(sequence='--AG')
-        self.assertEqual(sc.countDifferences(method='one'),1)
+        self.assertEqual(sc.countDifferences(),1)
 class test_seqComparer_36(unittest.TestCase):
     def runTest(self):
         refSeq='ACTG'
         sc=seqComparer(NCompressionCutoff = 1e8, maxNs = 1e8, reference=refSeq, startAfresh=True, snpCeiling =1)
         sc.setComparator1(sequence='TTAA')
         sc.setComparator2(sequence='--AG')
-        self.assertEqual(sc.countDifferences(method='one'),1)
+        self.assertEqual(sc.countDifferences(),1)
 class test_seqComparer_37(unittest.TestCase):
     """ tests the loading of an exclusion file """
     def runTest(self):

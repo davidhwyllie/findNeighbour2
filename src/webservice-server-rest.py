@@ -763,7 +763,7 @@ class test_get_all_values_2(unittest.TestCase):
         
         # make a single nucleotide change
         vseq=list(seq)
-        vseq[100]='A'
+        vseq[100000]='A'
         vseq=''.join(vseq)
         
         variants = {
@@ -772,8 +772,8 @@ class test_get_all_values_2(unittest.TestCase):
                 "guid_gav_{0}".format(n_pre+3):vseq                
         }
         
-        expected = [ "guid_gav_{0}".format(n_pre+1), "guid_gav_{0}".format(n_pre+2)]
-        unexpected = [ "guid_gav_{0}".format(n_pre+3)]
+        expected = [ "guid_gav_{0}".format(n_pre+1), "guid_gav_{0}".format(n_pre+2)]        # the sequences without variants
+        unexpected = [ "guid_gav_{0}".format(n_pre+3)]      # the sequence with the variant
         
         for guid_to_insert in variants.keys():
 
@@ -799,7 +799,7 @@ class test_get_all_values_2(unittest.TestCase):
                 if snp>0:
                         self.fail("cutoff not enforced. {0} {1} {2}".format(guid1, guid2, snp))
                 if guid1 in expected and guid2 in unexpected:
-                        self.fail("cutoff not enforced. {0} vs {1}".format(guid1, guid2))
+                        self.fail("cutoff not enforced. {0} vs {1}".format(guid1, guid2, snp))
                 if guid1 in expected and guid2 in expected:
                         did_recover_expected = True
                         
